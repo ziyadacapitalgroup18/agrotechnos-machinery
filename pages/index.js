@@ -209,12 +209,20 @@ return (
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {[Tractor, Layers, SquareStack, Ship].map((Icon, i) => (
-              <div key={i} className="flex items-center justify-center h-28 rounded-sm" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid #3C4854" }}>
-                <Icon size={40} strokeWidth={1.25} color={COLORS.amber} />
-              </div>
-            ))}
-          </div>
+              {[
+                { Icon: Tractor, label: "Tractors", color: COLORS.amber },
+                { Icon: Layers, label: "Ploughs", color: COLORS.rust },
+                { Icon: SquareStack, label: "Ridgers", color: COLORS.green },
+                { Icon: Ship, label: "Worldwide Shipping", color: COLORS.amber },
+              ].map(({ Icon, label, color }, i) => (
+                <div key={i} className="flex flex-col items-center justify-center gap-3 h-32 rounded-sm" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid #3C4854" }}>
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full" style={{ background: `${color}22` }}>
+                    <Icon size={26} strokeWidth={1.75} color={color} />
+                  </div>
+                  <span className="text-xs font-semibold text-center px-2" style={{ color: "#C9D0D6" }}>{label}</span>
+                </div>
+              ))}
+            </div>
         </div>
       </section>
 
