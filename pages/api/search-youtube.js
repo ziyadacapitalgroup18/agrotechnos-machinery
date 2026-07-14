@@ -17,7 +17,11 @@ export default async function handler(req, res) {
       `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=10&key=${YT_KEY}`
     );
     const searchData = await searchRes.json();
-    const videoIds = (searchData.items || []).map(item => item.id.videoId);
+const videoIds = (searchData.items || []).map(item => item.id.videoId);
+
+if (!searchData.items) {
+  return res.status(200).json({ found: 0, matches: [], debug: { rawResponse: searchData } });
+}
 
     let matches = [];
 
