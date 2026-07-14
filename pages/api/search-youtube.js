@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     }
 
     if (matches.length > 0) {
-      await supabase.from('leads').insert(matches);
+      await supabase.from('leads').upsert(matches, { onConflict: 'source_url', ignoreDuplicates: true });
     }
 
     res.status(200).json({ found: matches.length, matches });
