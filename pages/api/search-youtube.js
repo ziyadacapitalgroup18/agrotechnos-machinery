@@ -53,7 +53,11 @@ export default async function handler(req, res) {
       await supabase.from('leads').insert(matches);
     }
 
-    res.status(200).json({ found: matches.length, matches });
+    res.status(200).json({ 
+  found: matches.length, 
+  matches, 
+  debug: { videosFound: videoIds.length, videoIds } 
+});
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
