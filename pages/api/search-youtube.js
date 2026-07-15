@@ -34,6 +34,10 @@ export default async function handler(req, res) {
 
         const matchedKeyword = keywords.find(kw => text.includes(kw.toLowerCase()));
         if (matchedKeyword) {
+          const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+          const phoneRegex = /(\+?\d[\d\s-]{7,}\d)/;
+          const hasContactInfo = emailRegex.test(comment.textOriginal) || phoneRegex.test(comment.textOriginal);
+
           matches.push({
             platform: 'youtube',
             source_url: `https://youtube.com/watch?v=${videoId}&lc=${item.snippet.topLevelComment.id}`,
@@ -43,7 +47,8 @@ export default async function handler(req, res) {
             language,
             product,
             matched_keyword: matchedKeyword,
-            score: 'warm',
+            score: hasContactInfo ? 'hot' : 'warm',
+            has_contact_info: hasContactInfo,
           });
         }
       }
