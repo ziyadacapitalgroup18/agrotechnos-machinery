@@ -54,7 +54,7 @@ export default async function handler(req, res) {
       }
     }
 
- let newMatches = matches;
+    let newMatches = matches;
     if (matches.length > 0) {
       const urls = matches.map(m => m.source_url);
       const { data: existing } = await supabase.from('leads').select('source_url').in('source_url', urls);
@@ -67,9 +67,6 @@ export default async function handler(req, res) {
     }
 
     res.status(200).json({ found: newMatches.length, matches: newMatches, totalScanned: matches.length });
-    }
-
-    res.status(200).json({ found: matches.length, matches });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
