@@ -73,9 +73,23 @@ export default function LeadsPage() {
         </button>
       </div>
 
+      {results && !results.error && results.matches && results.matches.length > 0 && (
+        <div style={{ background: '#e8f5e9', border: '2px solid #4caf50', padding: 15, marginBottom: 20, borderRadius: 6 }}>
+          <h3 style={{ marginTop: 0 }}>🆕 New this search ({results.found})</h3>
+          {results.matches.map(m => (
+            <div key={m.source_url} style={{ padding: '8px 0', borderBottom: '1px solid #c8e6c9' }}>
+              <strong>{m.author_name}</strong> — {m.comment_text}
+              <br />
+              <a href={m.source_url} target="_blank" rel="noreferrer">View comment</a>
+              {m.has_contact_info && <span style={{ color: 'red', marginLeft: 10 }}>📞 Contact info found</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
       {results && (
         <p>
-          {results.error ? `Error: ${results.error}` : `Found ${results.found} new match(es) this search.`}
+          {results.error ? `Error: ${results.error}` : `Scanned ${results.totalScanned} comment(s), ${results.found} were new.`}
         </p>
       )}
 
