@@ -55,18 +55,28 @@ export default async function handler(req, res) {
     }
 
     let newMatches = matches;
+    let insertError = null;
+    let selectError = null;
+
     if (matches.length > 0) {
       const urls = matches.map(m => m.source_url);
-      const { data: existing } = await supabase.from('leads').select('source_url').in('source_url', urls);
+      const { data: existing, error: selErr } = await supabase.from('leads').select('source_url').in('source_url', urls);
+      selectError = selErr;
       const existingUrls = new Set((existing || []).map(e => e.source_url));
       newMatches = matches.filter(m => !existingUrls.has(m.source_url));
 
       if (newMatches.length > 0) {
-        await supabase.from('leads').insert(newMatches);
+        const { error: insErr } = await supabase.from('leads').insert(newMatches);
+        insertError = insErr;
       }
     }
 
-    res.status(200).json({ found: newMatches.length, matches: newMatches, totalScanned: matches.length });
+    res.status(200).json({ 
+      found: newMatches.length, 
+      matches: newMatches, 
+      totalScanned: matches.length,
+      debug: { insertError, selectError }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
