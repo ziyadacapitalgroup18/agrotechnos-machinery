@@ -54,8 +54,19 @@ export default async function handler(req, res) {
       }
     }
 
+ let newMatches = matches;
     if (matches.length > 0) {
-      await supabase.from('leads').upsert(matches, { onConflict: 'source_url', ignoreDuplicates: true });
+      const urls = matches.map(m => m.source_url);
+      const { data: existing } = await supabase.from('leads').select('source_url').in('source_url', urls);
+      const existingUrls = new Set((existing || []).map(e => e.source_url));
+      newMatches = matches.filter(m => !existingUrls.has(m.source_url));
+
+      if (newMatches.length > 0) {
+        await supabase.from('leads').insert(newMatches);
+      }
+    }
+
+    res.status(200).json({ found: newMatches.length, matches: newMatches, totalScanned: matches.length });
     }
 
     res.status(200).json({ found: matches.length, matches });
