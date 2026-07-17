@@ -26,6 +26,7 @@ export default function LeadsPage() {
 
   const countries = [...new Set(targets.map(t => t.country))];
   const products = [...new Set(targets.filter(t => t.country === country).map(t => t.product))];
+  const currentKeywords = targets.find(t => t.country === country && t.product === product)?.keywords || [];
 
   async function handleSearch() {
     const target = targets.find(t => t.country === country && t.product === product);
@@ -93,6 +94,11 @@ export default function LeadsPage() {
         </p>
       )}
 
+      <hr style={{ margin: '30px 0' }} />
+      <h2>Web Search (Forums, Classifieds, B2B)</h2>
+      <WebSearchSection country={country} product={product} keywords={currentKeywords} onNewLeads={loadLeads} />
+
+      <hr style={{ margin: '30px 0' }} />
       <h2>All Leads ({leads.length})</h2>
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
@@ -118,6 +124,66 @@ export default function LeadsPage() {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function WebSearchSection({ country, product, keywords, onNewLeads }) {
+  const [customSite, setCustomSite] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState(null);
+
+  async function handleWebSearch() {
+    if (!country || !product) return alert('Pick a country and product above first');
+    setLoading(true);
+    setResults(null);
+    try {
+      const res = await fetch('/api/search-web', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ country, product, keywords: keywords || [], customSite: customSite || undefined }),
+      });
+      const data = await res.json();
+      setResults(data);
+      onNewLeads();
+    } catch (err) {
+      setResults({ error: err.message });
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div>
+      <input
+        type="text"
+        placeholder="Optional: custom site (e.g. somefarmsite.com)"
+        value={customSite}
+        onChange={e => setCustomSite(e.target.value)}
+        style={{ padding: 8, width: 300, marginRight: 10 }}
+      />
+      <button onClick={handleWebSearch} disabled={loading}>
+        {loading ? 'Searching...' : 'Search Web (39 sites or custom)'}
+      </button>
+
+      {results && (
+        <div style={{ marginTop: 15 }}>
+          {results.error ? (
+            <p>Error: {results.error}</p>
+          ) : (
+            <>
+              <p>Scanned {results.totalScanned} page(s), {results.found} were new.</p>
+              {results.matches && results.matches.map(m => (
+                <div key={m.source_url} style={{ background: '#e8f5e9', border: '1px solid #4caf50', padding: 10, marginBottom: 8, borderRadius: 6 }}>
+                  <strong>{m.author_name}</strong> — {m.comment_text}
+                  <br />
+                  <a href={m.source_url} target="_blank" rel="noreferrer">View page</a>
+                  {m.has_contact_info && <span style={{ color: 'red', marginLeft: 10 }}>📞 Contact info found</span>}
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
