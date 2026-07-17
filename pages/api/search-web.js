@@ -27,7 +27,16 @@ export default async function handler(req, res) {
 
   try {
     let query = `${product} ${country}`;
-    if (customSite) query += ` site:${customSite}`;
+    let siteList = [];
+
+    if (customSite) {
+      query += ` site:${customSite}`;
+    } else {
+      const { data: sites } = await supabase.from('search_sites').select('url').eq('active', true);
+      siteList = (sites || []).map(s => s.url);
+      const siteFilter = siteList.map(d => `site:${d}`).join(' OR ');
+      query += ` (${siteFilter})`;
+    }
 
     const serperRes = await fetch('https://google.serper.dev/search', {
       method: 'POST',
@@ -37,21 +46,11 @@ export default async function handler(req, res) {
     const serperData = await serperRes.json();
 
     if (!serperData.organic) {
-      return res.status(200).json({ found: 0, matches: [], note: serperData.message || 'no results', rawSerper: serperData });
+      return res.status(200).json({ found: 0, matches: [], note: serperData.message || 'no results', queryUsed: query, rawSerper: serperData });
     }
 
-    let candidateResults = serperData.organic;
-    let debugInfo = { rawResultCount: serperData.organic.length, rawLinks: serperData.organic.map(r => r.link) };
-
-    if (!customSite) {
-      const { data: sites } = await supabase.from('search_sites').select('url').eq('active', true);
-      const trustedDomains = (sites || []).map(s => s.url);
-      candidateResults = serperData.organic.filter(r => 
-        trustedDomains.some(domain => r.link.includes(domain))
-      );
-      debugInfo.trustedDomainsCount = trustedDomains.length;
-      debugInfo.filteredCount = candidateResults.length;
-    }
+    const candidateResults = serperData.organic;
+    const debugInfo = { rawResultCount: serperData.organic.length, rawLinks: serperData.organic.map(r => r.link), queryUsed: query };
 
     let matches = [];
 
