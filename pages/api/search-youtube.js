@@ -5,6 +5,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+function extractContactInfo(text) {
+  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+  const phoneRegex = /(?<![$€£¥\d])(\+?\d{1,4}[\s-])?\(?\d{2,4}\)?[\s-]\d{3,4}[\s-]?\d{0,4}(?!\d)/;
+  return emailRegex.test(text) || phoneRegex.test(text);
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -34,9 +40,7 @@ export default async function handler(req, res) {
 
         const matchedKeyword = keywords.find(kw => text.includes(kw.toLowerCase()));
         if (matchedKeyword) {
-          const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-          const phoneRegex = /(\+?\d[\d\s-]{7,}\d)/;
-          const hasContactInfo = emailRegex.test(comment.textOriginal) || phoneRegex.test(comment.textOriginal);
+          const hasContactInfo = extractContactInfo(comment.textOriginal);
 
           matches.push({
             platform: 'youtube',
