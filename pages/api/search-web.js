@@ -37,10 +37,11 @@ export default async function handler(req, res) {
     const serperData = await serperRes.json();
 
     if (!serperData.organic) {
-      return res.status(200).json({ found: 0, matches: [], note: serperData.message || 'no results' });
+      return res.status(200).json({ found: 0, matches: [], note: serperData.message || 'no results', rawSerper: serperData });
     }
 
     let candidateResults = serperData.organic;
+    let debugInfo = { rawResultCount: serperData.organic.length, rawLinks: serperData.organic.map(r => r.link) };
 
     if (!customSite) {
       const { data: sites } = await supabase.from('search_sites').select('url').eq('active', true);
@@ -48,6 +49,8 @@ export default async function handler(req, res) {
       candidateResults = serperData.organic.filter(r => 
         trustedDomains.some(domain => r.link.includes(domain))
       );
+      debugInfo.trustedDomainsCount = trustedDomains.length;
+      debugInfo.filteredCount = candidateResults.length;
     }
 
     let matches = [];
@@ -93,7 +96,7 @@ export default async function handler(req, res) {
       }
     }
 
-    res.status(200).json({ found: newMatches.length, matches: newMatches, totalScanned: matches.length });
+    res.status(200).json({ found: newMatches.length, matches: newMatches, totalScanned: matches.length, debugInfo });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
