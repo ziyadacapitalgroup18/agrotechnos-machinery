@@ -15,7 +15,7 @@ function stripHtml(html) {
 
 function extractContactInfo(text) {
   const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-  const phoneRegex = /(\+?\d[\d\s-]{7,}\d)/;
+  const phoneRegex = /(?<![$€£¥\d])(\+?\d{1,4}[\s-])?\(?\d{2,4}\)?[\s-]\d{3,4}[\s-]?\d{0,4}(?!\d)/;
   return emailRegex.test(text) || phoneRegex.test(text);
 }
 
@@ -46,11 +46,11 @@ export default async function handler(req, res) {
     const serperData = await serperRes.json();
 
     if (!serperData.organic) {
-      return res.status(200).json({ found: 0, matches: [], note: serperData.message || 'no results', queryUsed: query, rawSerper: serperData });
+      return res.status(200).json({ found: 0, matches: [], note: serperData.message || 'no results', queryUsed: query });
     }
 
     const candidateResults = serperData.organic;
-    const debugInfo = { rawResultCount: serperData.organic.length, rawLinks: serperData.organic.map(r => r.link), queryUsed: query };
+    const debugInfo = { rawResultCount: serperData.organic.length, queryUsed: query };
 
     let matches = [];
 
